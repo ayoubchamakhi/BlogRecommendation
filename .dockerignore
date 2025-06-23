@@ -1,0 +1,24 @@
+# Git and IDE files
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Python caches and virtual environments
+__pycache__/
+*.pyc
+.env
+.venv
+env/
+venv/
+.conda
+
+# Large data files that shouldn't be in the image
+
+
+# Notebook checkpoints
+.ipynb_checkpoints
