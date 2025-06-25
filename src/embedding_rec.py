@@ -7,6 +7,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import os
 import pandas as pd
 import numpy as np
+from openai import OpenAI
 
 def recs_to_dataframe(recs, unique_blogs):
     """
@@ -138,7 +139,136 @@ def get_recommendations_for_user(user_id, df, embedding_model, top_n=10):
     recommendations.sort(key=lambda x: x[1], reverse=True)
     return recommendations[:top_n]
 
+
+def generate_personalized_ads(rec_df, user_id, df, unique_blogs, client):
+    """
+    Generate personalized advertising content for recommendations using OpenAI API.
+
+    Parameters:
+    -----------
+    rec_df : pd.DataFrame
+        DataFrame with recommendations (from recs_to_dataframe)
+    user_id : int
+        User ID for context about user preferences
+    df : pd.DataFrame
+        Original dataframe with ratings (for user context)
+    unique_blogs : pd.DataFrame
+        DataFrame with unique blog information (for user context)
+    client : OpenAI
+        OpenAI client instance
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame with personalized advertising content
+    """
+
+    # Debug: Print column information
+    print(f"DEBUG - rec_df columns: {rec_df.columns.tolist()}")
+    print(f"DEBUG - unique_blogs columns: {unique_blogs.columns.tolist()}")
+    print(f"DEBUG - df columns: {df.columns.tolist()}")
+
+    # Get user's liked blogs for context
+    user_ratings = df[df['user_id'] == user_id]
+    liked_blogs = user_ratings[user_ratings['ratings'] >= 4]
+
+    print(f"DEBUG - liked_blogs shape: {liked_blogs.shape}")
+    print(f"DEBUG - liked_blogs columns: {liked_blogs.columns.tolist()}")
+
+    # Create context about user's preferences
+    if len(liked_blogs) > 0:
+        try:
+            # Merge to get blog titles
+            liked_with_titles = liked_blogs.merge(unique_blogs, on='blog_id', how='left')
+
+            print(f"DEBUG - liked_with_titles columns: {liked_with_titles.columns.tolist()}")
+
+            # Check if blog_title column exists
+            if 'blog_title' in liked_with_titles.columns:
+                liked_titles = liked_with_titles['blog_title'].dropna().tolist()
+                user_context = f"User previously liked blogs: {', '.join(liked_titles[:3])}"
+            else:
+                # Fallback: use blog_ids if titles not available
+                liked_ids = liked_blogs['blog_id'].tolist()
+                user_context = f"User previously liked blog IDs: {', '.join(map(str, liked_ids[:3]))}"
+        except Exception as e:
+            print(f"Warning: Could not create user context - {e}")
+            user_context = "User has previous ratings but context unavailable"
+    else:
+        user_context = "New user with no previous ratings"
+
+    print(f"DEBUG - user_context: {user_context}")
+
+    # System prompt for generating personalized ads
+    system_prompt = """You are a personalized content marketing specialist. 
+    Create engaging, personalized blog recommendations that feel natural and compelling.
+    Your goal is to create a short, catchy advertisement (2-3 sentences) that connects the user's interests to the recommended blog.
+    Use phrases like "Because you enjoyed..." or "Since you liked..." to create personal connections.
+    Keep it concise, engaging, and avoid being overly salesy."""
+
+    all_ads = []
+
+    # Generate ads for all recommendations in the DataFrame
+    for idx, row in rec_df.iterrows():
+        blog_title = row['blog_title']
+        blog_content = row['blog_content'][:500] if pd.notna(row['blog_content']) else "No content available"
+        author_name = row.get('author_name', 'Unknown Author')
+        topic = row.get('topic', 'General')
+        score = row['score']
+
+        # Create the prompt for this specific blog
+        blog_info = f"""
+        Blog Title: {blog_title}
+        Author: {author_name}
+        Topic: {topic}
+        Content Preview: {blog_content}
+        Recommendation Score: {score:.3f}
+        User Context: {user_context}
+        """
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f'Create a personalized recommendation ad for this blog: {blog_info}'}
+        ]
+
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4-turbo",
+                messages=messages,
+                temperature=0.7,
+                max_tokens=150
+            )
+
+            ad_content = response.choices[0].message.content
+
+            all_ads.append({
+                "blog_id": row['blog_id'],
+                "blog_title": blog_title,
+                "author_name": author_name,
+                "topic": topic,
+                "recommendation_score": score,
+                "personalized_ad": ad_content,
+                "content_preview": blog_content[:200] + "..." if len(blog_content) > 200 else blog_content
+            })
+
+        except Exception as e:
+            all_ads.append({
+                "blog_id": row['blog_id'],
+                "blog_title": blog_title,
+                "author_name": author_name,
+                "topic": topic,
+                "recommendation_score": score,
+                "personalized_ad": f"[Error generating ad] {e}",
+                "content_preview": blog_content[:200] + "..." if len(blog_content) > 200 else blog_content
+            })
+
+    ads_df = pd.DataFrame(all_ads)
+    return ads_df
+
 # Example usage:
+
+# Initialize OpenAI client
+client = OpenAI(api_key="your-openai-api-key-here")
 curr_path= os.getcwd()
 base_path = os.path.dirname(os.getcwd())
 rawdata_path = os.path.join(base_path, "data" ,"raw")
@@ -148,5 +278,22 @@ df= pd.read_pickle(os.path.join(processeddata_path, 'cleaned_blog_ratings.pkl'))
 embedding_model = load_embedding_model(os.path.join(base_path,"models","embedding_model.pkl"))
 unique_blogs = prepare_blog_data(df)
 recs = get_recommendations_for_user(user_id=123, df=df, embedding_model=embedding_model)
-print(recs)
-# display(recs_to_dataframe(recs, unique_blogs).head())
+#print(recs)
+#display(recs_to_dataframe(recs, unique_blogs).head())
+rec_df = recs_to_dataframe(recs, unique_blogs).head(5)
+
+# Generate personalized ads using the prepared DataFrame
+personalized_ads = generate_personalized_ads(rec_df, user_id=123, df=df, unique_blogs=unique_blogs, client=client)
+
+print("PERSONALIZED BLOG RECOMMENDATIONS:")
+print("=" * 50)
+for idx, row in personalized_ads.iterrows():
+    print(f"\n{row['blog_title']}")
+    print(f"  By: {row['author_name']}")
+    print(f"  Topic: {row['topic']}")
+    print(f" Score: {row['recommendation_score']:.3f}")
+    print(f" {row['personalized_ad']}")
+    print("-" * 40)
+
+print("\nDataFrame Preview:")
+print(personalized_ads[['blog_title', 'author_name', 'recommendation_score', 'personalized_ad']].head())
