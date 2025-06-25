@@ -8,6 +8,10 @@ import os
 import pandas as pd
 import numpy as np
 from openai import OpenAI
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def recs_to_dataframe(recs, unique_blogs):
     """
@@ -163,25 +167,15 @@ def generate_personalized_ads(rec_df, user_id, df, unique_blogs, client):
         DataFrame with personalized advertising content
     """
 
-    # Debug: Print column information
-    print(f"DEBUG - rec_df columns: {rec_df.columns.tolist()}")
-    print(f"DEBUG - unique_blogs columns: {unique_blogs.columns.tolist()}")
-    print(f"DEBUG - df columns: {df.columns.tolist()}")
-
     # Get user's liked blogs for context
     user_ratings = df[df['user_id'] == user_id]
     liked_blogs = user_ratings[user_ratings['ratings'] >= 4]
-
-    print(f"DEBUG - liked_blogs shape: {liked_blogs.shape}")
-    print(f"DEBUG - liked_blogs columns: {liked_blogs.columns.tolist()}")
 
     # Create context about user's preferences
     if len(liked_blogs) > 0:
         try:
             # Merge to get blog titles
             liked_with_titles = liked_blogs.merge(unique_blogs, on='blog_id', how='left')
-
-            print(f"DEBUG - liked_with_titles columns: {liked_with_titles.columns.tolist()}")
 
             # Check if blog_title column exists
             if 'blog_title' in liked_with_titles.columns:
@@ -192,12 +186,9 @@ def generate_personalized_ads(rec_df, user_id, df, unique_blogs, client):
                 liked_ids = liked_blogs['blog_id'].tolist()
                 user_context = f"User previously liked blog IDs: {', '.join(map(str, liked_ids[:3]))}"
         except Exception as e:
-            print(f"Warning: Could not create user context - {e}")
             user_context = "User has previous ratings but context unavailable"
     else:
         user_context = "New user with no previous ratings"
-
-    print(f"DEBUG - user_context: {user_context}")
 
     # System prompt for generating personalized ads
     system_prompt = """You are a personalized content marketing specialist. 
@@ -268,7 +259,7 @@ def generate_personalized_ads(rec_df, user_id, df, unique_blogs, client):
 # Example usage:
 
 # Initialize OpenAI client
-client = OpenAI(api_key="your-openai-api-key-here")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 curr_path= os.getcwd()
 base_path = os.path.dirname(os.getcwd())
 rawdata_path = os.path.join(base_path, "data" ,"raw")
