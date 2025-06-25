@@ -4,6 +4,9 @@
 import pickle
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import os
+import pandas as pd
+import numpy as np
 
 def recs_to_dataframe(recs, unique_blogs):
     """
@@ -136,7 +139,14 @@ def get_recommendations_for_user(user_id, df, embedding_model, top_n=10):
     return recommendations[:top_n]
 
 # Example usage:
-embedding_model = load_embedding_model('model/embedding_model.pkl')
+curr_path= os.getcwd()
+base_path = os.path.dirname(os.getcwd())
+rawdata_path = os.path.join(base_path, "data" ,"raw")
+processeddata_path = os.path.join(base_path, "data", "processed") 
+
+df= pd.read_pickle(os.path.join(processeddata_path, 'cleaned_blog_ratings.pkl'))
+embedding_model = load_embedding_model(os.path.join(base_path,"models","embedding_model.pkl"))
 unique_blogs = prepare_blog_data(df)
 recs = get_recommendations_for_user(user_id=123, df=df, embedding_model=embedding_model)
+print(recs)
 # display(recs_to_dataframe(recs, unique_blogs).head())
