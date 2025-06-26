@@ -137,6 +137,8 @@ pytest
 ```bash
 black .
 isort .
+pycodestyle .
+pylint .
 ```
 
 ### Linting
