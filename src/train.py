@@ -8,7 +8,7 @@ from surprise.model_selection import GridSearchCV, cross_validate
 print("--- Starting Collaborative Filtering Model Training ---")
 
 # --- 1. Define Paths & Load Training Data ---
-base_path = os.getcwd()
+base_path = os.path.dirname(os.getcwd())
 processed_path = os.path.join(base_path, "data", "processed")
 models_path = os.path.join(base_path, "models")
 model_filepath = os.path.join(models_path, "collaborative_model.pkl")
