@@ -29,4 +29,38 @@ dependencies:
 
   # --- Pip Packages ---
   - pip:
-    - annoy
+    - streamlit
+    - openai
+    - python-dotenv
+    - tqdm
+    - transformers
+    - huggingface-hub
+    - safetensors
+    - tokenizers
+    - regex
+    - requests
+    - pillow
+    - typing-extensions
+    - filelock
+    - fsspec
+    - packaging
+    - pyyaml
+    - numba
+    - pynndescent
+    - contourpy
+    - cycler
+    - fonttools
+    - kiwisolver
+    - pyparsing
+    - python-dateutil
+    - joblib
+    - threadpoolctl
+    - jinja2
+    - markupsafe
+    - charset-normalizer
+    - idna
+    - urllib3
+    - certifi
+    - llvmlite
+    - six
+    - colorama
