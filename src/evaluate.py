@@ -1,6 +1,6 @@
-# src/evaluate.py
 import os
 import pickle
+import math
 from collections import defaultdict
 
 import pandas as pd
@@ -26,22 +26,16 @@ def precision_recall_at_k(predictions, k=10, threshold=3):
         # Number of relevant items in the test set for this user
         n_rel = sum((true_r >= threshold) for (_, true_r) in user_ratings)
 
-        # --- THIS IS THE CORRECTED LOGIC ---
         # Number of recommended items in top k that are relevant.
-        # We only care if the TRUE rating is high.
         n_rel_and_rec_k = sum(
             (true_r >= threshold) for (_, true_r) in user_ratings[:k]
         )
-        # ------------------------------------
 
         # Precision@k: Proportion of recommended items in top-k that are relevant.
         precisions[uid] = n_rel_and_rec_k / k
 
         # Recall@k: Proportion of relevant items that are in the top-k list.
-        if n_rel != 0:
-            recalls[uid] = n_rel_and_rec_k / n_rel
-        else:
-            recalls[uid] = 0
+        recalls[uid] = (n_rel_and_rec_k / n_rel) if n_rel != 0 else 0
 
     mean_precision = sum(prec for prec in precisions.values()) / len(precisions)
     mean_recall = sum(rec for rec in recalls.values()) / len(recalls)
@@ -82,6 +76,12 @@ testset = list(test_df[["user_id", "blog_id", "ratings"]].itertuples(
 ))
 predictions = algo.test(testset)
 
+# --- 2.1 Compute RMSE ---
+# predictions is a list of tuples: (uid, iid, true_r, est, details)
+mse = sum((true_r - est) ** 2 for (_, _, true_r, est, _) in predictions) / len(predictions)
+rmse = math.sqrt(mse)
+print(f"\nRMSE on test set: {rmse:.4f}")
+
 # --- 3. Report Final Performance ---
 relevance_threshold = 3
 k_value = 10
@@ -93,6 +93,10 @@ mean_precision, mean_recall = precision_recall_at_k(
 print("\n--- Final Model Performance on Unseen Test Data ---")
 print(f"Relevance Threshold: A blog is 'relevant' if its true rating is >= {relevance_threshold}")
 print(f"K value: {k_value}\n")
+print(f"RMSE:               {rmse:.4f}")
 print(f"Precision@{k_value}: {mean_precision:.4f}")
-print(f"\nThis means that, on average, if we show a user the top {k_value} blogs, {mean_precision:.1%} of them will be blogs they actually like.")
+print(f"Recall@{k_value}:    {mean_recall:.4f}")
+
+print("\nThis means that, on average, if we show a user the top "
+      f"{k_value} blogs, {mean_precision:.1%} of them will be blogs they actually like.")
 print("--- Evaluation Script Finished ---")
