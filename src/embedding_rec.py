@@ -259,32 +259,32 @@ def generate_personalized_ads(rec_df, user_id, df, unique_blogs, client):
 # Example usage:
 
 # Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-curr_path= os.getcwd()
-base_path = os.path.dirname(os.getcwd())
-rawdata_path = os.path.join(base_path, "data" ,"raw")
-processeddata_path = os.path.join(base_path, "data", "processed") 
+# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# curr_path= os.getcwd()
+# base_path = os.path.dirname(os.getcwd())
+# rawdata_path = os.path.join(base_path, "data" ,"raw")
+# processeddata_path = os.path.join(base_path, "data", "processed") 
 
-df= pd.read_pickle(os.path.join(processeddata_path, 'cleaned_blog_ratings.pkl'))
-embedding_model = load_embedding_model(os.path.join(base_path,"models","embedding_model.pkl"))
-unique_blogs = prepare_blog_data(df)
-recs = get_recommendations_for_user(user_id=123, df=df, embedding_model=embedding_model)
-#print(recs)
-#display(recs_to_dataframe(recs, unique_blogs).head())
-rec_df = recs_to_dataframe(recs, unique_blogs).head(5)
+# df= pd.read_pickle(os.path.join(processeddata_path, 'cleaned_blog_ratings.pkl'))
+# embedding_model = load_embedding_model(os.path.join(base_path,"models","embedding_model.pkl"))
+# unique_blogs = prepare_blog_data(df)
+# recs = get_recommendations_for_user(user_id=123, df=df, embedding_model=embedding_model)
+# #print(recs)
+# #display(recs_to_dataframe(recs, unique_blogs).head())
+# rec_df = recs_to_dataframe(recs, unique_blogs).head(5)
 
-# Generate personalized ads using the prepared DataFrame
-personalized_ads = generate_personalized_ads(rec_df, user_id=123, df=df, unique_blogs=unique_blogs, client=client)
+# # Generate personalized ads using the prepared DataFrame
+# personalized_ads = generate_personalized_ads(rec_df, user_id=123, df=df, unique_blogs=unique_blogs, client=client)
 
-print("PERSONALIZED BLOG RECOMMENDATIONS:")
-print("=" * 50)
-for idx, row in personalized_ads.iterrows():
-    print(f"\n{row['blog_title']}")
-    print(f"  By: {row['author_name']}")
-    print(f"  Topic: {row['topic']}")
-    print(f" Score: {row['recommendation_score']:.3f}")
-    print(f" {row['personalized_ad']}")
-    print("-" * 40)
+# print("PERSONALIZED BLOG RECOMMENDATIONS:")
+# print("=" * 50)
+# for idx, row in personalized_ads.iterrows():
+#     print(f"\n{row['blog_title']}")
+#     print(f"  By: {row['author_name']}")
+#     print(f"  Topic: {row['topic']}")
+#     print(f" Score: {row['recommendation_score']:.3f}")
+#     print(f" {row['personalized_ad']}")
+#     print("-" * 40)
 
-print("\nDataFrame Preview:")
-print(personalized_ads[['blog_title', 'author_name', 'recommendation_score', 'personalized_ad']].head())
+# print("\nDataFrame Preview:")
+# print(personalized_ads[['blog_title', 'author_name', 'recommendation_score', 'personalized_ad']].head())
