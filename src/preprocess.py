@@ -10,7 +10,6 @@ import pandas as pd
 import seaborn as sns
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
-from sklearn.feature_extraction.text import TfidfVectorizer
 from wordcloud import WordCloud
 
 curr_path = os.getcwd()
