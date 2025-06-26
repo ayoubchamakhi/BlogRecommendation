@@ -25,35 +25,48 @@ except ImportError as e:
 
 # --- Custom CSS for Enhanced UI ---
 def load_css():
-    """Injects custom CSS for a more polished, modern UI."""
+    """Injects custom CSS for a more polished, modern UI with visible text."""
     css = """
     <style>
         /* Import Google Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap');
         :root {
-            --medium-beige: #FAF9F6; --medium-black: #1d1d1d; --medium-green: #1a8917;
+            --medium-beige: #FAF9F6; --medium-black: #222; --medium-green: #1a8917;
             --medium-gray: #6c6c6c; --border-color: #e0e0e0; --font-serif: 'Source Serif 4', serif;
             --font-sans: 'Source Sans 3', sans-serif;
             --gradient-start: #2a2a2a; --gradient-end: #1d1d1d;
         }
-        body { font-family: var(--font-sans); color: var(--medium-black); }
-        
+        body, [data-testid="stAppViewContainer"], [data-testid="stSidebar"] {
+            color: #222 !important;
+        }
+        /* Sidebar background should be light if text is dark */
+        [data-testid="stSidebar"] {
+            background-color: #fff !important;
+            color: #222 !important;
+        }
+        /* Main content background (optional, for contrast) */
+        [data-testid="stAppViewContainer"] > .main {
+            background-color: #f8f8f8 !important;
+            color: #222 !important;
+        }
+        h1, h2, h3, h4, h5, h6, label, .stTextInput, .stSelectbox, .stSlider, .stButton, .stCaption, .stMarkdown, .stForm, .stExpander, .stSubheader, .stRadio, .stCheckbox, .stMultiSelect, .stNumberInput, .stDateInput, .stTimeInput, .stColorPicker, .stFileUploader, .stTextArea, .stDataFrame, .stTable, .stMetric, .stAlert, .stException, .stTooltip, .stHelp, .stInfo, .stWarning, .stError, .stSuccess {
+            color: #222 !important;
+        }
         /* ENHANCEMENT: Subtle gradient on main background */
         [data-testid="stAppViewContainer"] > .main {
              background-image: radial-gradient(circle at 20% 20%, rgba(240, 240, 240, 0.3), var(--medium-beige) 30%);
         }
-        
         /* ENHANCEMENT: Wider sidebar */
         [data-testid="stSidebar"] {
-            background-color: #FFFFFF; border-right: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
             width: 360px !important; min-width: 360px !important;
         }
-        h1, h2, h3 { font-family: var(--font-serif); color: var(--medium-black); }
-        
+        h1, h2, h3 { font-family: var(--font-serif); }
         /* ENHANCEMENT: Gradient buttons */
         .stButton>button {
             background-image: linear-gradient(45deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
-            color: #FFFFFF; font-family: var(--font-sans);
+            color: #fff !important;
+            font-family: var(--font-sans);
             border: none; border-radius: 20px; padding: 10px 20px; transition: all 0.3s;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
@@ -62,11 +75,11 @@ def load_css():
             box-shadow: 0 6px 20px rgba(0,0,0,0.25);
         }
         .stButton>button:focus { box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        
         /* Card Styling with Hover Effect */
         [data-testid="stVerticalBlockBorderWrapper"] {
-            background-color: #FFFFFF; border: 1px solid var(--border-color);
+            background-color: #fff; border: 1px solid var(--border-color);
             border-radius: 4px; padding: 24px; transition: all 0.2s ease-in-out;
+            color: #222 !important;
         }
         [data-testid="stVerticalBlockBorderWrapper"]:hover {
             border-color: var(--medium-gray); box-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -75,23 +88,51 @@ def load_css():
             border-left: 3px solid var(--medium-green); padding-left: 15px;
             font-style: italic; color: var(--medium-black);
         }
-        
         /* ENHANCEMENT: Welcome/Hero Section Styling */
         .hero-section {
-            background-color: #FFFFFF;
+            background-color: #fff;
             padding: 40px; text-align: center;
             border-radius: 10px; border: 1px solid var(--border-color);
             margin-bottom: 30px;
+            color: #222 !important;
         }
         .hero-section h2 { font-size: 2.5em; margin-bottom: 10px; }
         .hero-section p { font-size: 1.1em; color: var(--medium-gray); max-width: 600px; margin: auto;}
-        
         /* ENHANCEMENT: How it Works Section Styling */
-        .how-it-works-col { text-align: center; padding: 20px; }
+        .how-it-works-col { text-align: center; padding: 20px; color: #222 !important; }
         .how-it-works-col .icon { font-size: 3em; }
-
         /* ENHANCEMENT: Footer Styling */
         .footer { text-align: center; padding: 20px; color: var(--medium-gray); font-size: 0.9em; }
+        /* Headings in main content area (dark background) */
+        [data-testid="stAppViewContainer"] .main > h1,
+        [data-testid="stAppViewContainer"] .main > h2,
+        [data-testid="stAppViewContainer"] .main > h3,
+        [data-testid="stAppViewContainer"] .main > h4,
+        [data-testid="stAppViewContainer"] .main > h5,
+        [data-testid="stAppViewContainer"] .main > h6,
+        [data-testid="stAppViewContainer"] .main > div > h1,
+        [data-testid="stAppViewContainer"] .main > div > h2,
+        [data-testid="stAppViewContainer"] .main > div > h3,
+        [data-testid="stAppViewContainer"] .main > div > h4,
+        [data-testid="stAppViewContainer"] .main > div > h5,
+        [data-testid="stAppViewContainer"] .main > div > h6,
+        [data-testid="stAppViewContainer"] .main .stMarkdown > h1,
+        [data-testid="stAppViewContainer"] .main .stMarkdown > h2,
+        [data-testid="stAppViewContainer"] .main .stMarkdown > h3,
+        [data-testid="stAppViewContainer"] .main .stMarkdown > h4,
+        [data-testid="stAppViewContainer"] .main .stMarkdown > h5,
+        [data-testid="stAppViewContainer"] .main .stMarkdown > h6 {
+            color: #fff !important;
+        }
+        /* Headings in light cards/containers */
+        [data-testid="stVerticalBlockBorderWrapper"] h1,
+        [data-testid="stVerticalBlockBorderWrapper"] h2,
+        [data-testid="stVerticalBlockBorderWrapper"] h3,
+        [data-testid="stVerticalBlockBorderWrapper"] h4,
+        [data-testid="stVerticalBlockBorderWrapper"] h5,
+        [data-testid="stVerticalBlockBorderWrapper"] h6 {
+            color: #222 !important;
+        }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
