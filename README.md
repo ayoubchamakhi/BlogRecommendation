@@ -154,10 +154,10 @@ The system uses the following data:
 ## 🤝 Team Members
 
 - **Ekaterina**: EDA + LLM Integration
-- **Abhishek**: Content-Based Filtering & Embeddings
+- **Abhishek**: Content-Based Filtering & Embeddings, Docker
 - **Ayoub**: GitHub Structure & Collaborative Filtering
-- **Adesh**: [Role TBD]
-- **Jintian**: [Role TBD]
+- **Adesh**: Stream lit UI 
+- **Jintian**: Presentation and report
 
 ## 📝 License
 
