@@ -1,26 +1,27 @@
+"""Preprocessing utilities for the blog recommendation system."""
+
 import os
 import random
 import re
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from typing import Tuple
-from wordcloud import WordCloud
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer, PorterStemmer
-from sklearn.feature_extraction.text import TfidfVectorizer
 
-curr_path= os.getcwd()
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+from wordcloud import WordCloud
+
+curr_path = os.getcwd()
 base_path = os.path.dirname(os.getcwd())
-rawdata_path = os.path.join(base_path, "data" ,"raw")
-processeddata_path = os.path.join(base_path, "data", "processed") 
+rawdata_path = os.path.join(base_path, "data", "raw")
+processeddata_path = os.path.join(base_path, "data", "processed")
 if not os.path.exists(processeddata_path):
     os.makedirs(processeddata_path)
 print(f"Current working directory: {curr_path}")
-print(f"Base path for data: {base_path}")       
-print(f"Raw data path: {rawdata_path}")   
-print("Processed data path:", processeddata_path) 
-
+print(f"Base path for data: {base_path}")
+print(f"Raw data path: {rawdata_path}")
+print("Processed data path:", processeddata_path)
 
 
 # Load data
@@ -63,15 +64,18 @@ def load_data(rawdata_path):
 
     return blogs, ratings, authors
 
+
 def preprocess_blogs(blogs: pd.DataFrame) -> pd.DataFrame:
     """
-    Preprocess blog metadata: convert scrape_time to datetime and add scrape_date.
+    Preprocess blog metadata: convert scrape_time to datetime
+    and add scrape_date.
 
     Args:
         blogs (pd.DataFrame): Blog metadata DataFrame.
 
     Returns:
-        pd.DataFrame: Processed blogs DataFrame with 'scrape_time' as datetime and 'scrape_date' added.
+        pd.DataFrame: Processed blogs DF with 'scrape_time'
+        as datetime and 'scrape_date' added.
     """
     blogs["scrape_time"] = pd.to_datetime(blogs["scrape_time"])
     blogs["scrape_date"] = blogs["scrape_time"].dt.date
@@ -93,15 +97,19 @@ def print_summary_info(
     num_authors = authors["author_id"].nunique()
     num_users = ratings["user_id"].nunique()
     num_ratings = len(ratings)
+    avg_rating_user = num_ratings / num_users
+    avg_rating_blog = num_ratings / num_blogs
+    min_rating = ratings['ratings'].min()
+    max_rating = ratings['ratings'].max()
 
     print("Dataset Summary:")
     print(f"Number of unique blogs: {num_blogs}")
     print(f"Number of unique authors: {num_authors}")
     print(f"Number of unique users: {num_users}")
     print(f"Number of total ratings: {num_ratings}")
-    print(f"Avg. ratings per user: {num_ratings / num_users:.2f}")
-    print(f"Avg. ratings per blog: {num_ratings / num_blogs:.2f}")
-    print(f"Rating range: {ratings['ratings'].min()} to {ratings['ratings'].max()}")
+    print(f"Avg. ratings per user: {avg_rating_user:.2f}")
+    print(f"Avg. ratings per blog: {avg_rating_blog:.2f}")
+    print(f"Rating range: {min_rating} to {max_rating}")
 
 
 def merge_data(
@@ -179,10 +187,11 @@ def plot_scrape_activity(blogs: pd.DataFrame) -> None:
     Visualize blog scraping activity over time.
 
     Args:
-        blogs (pd.DataFrame): DataFrame with a 'scrape_date' column (date type).
+        blogs (pd.DataFrame): DataFrame with a 'scrape_date' col.
     """
     blog_counts = blogs["scrape_date"].value_counts().sort_index()
-    blog_counts.plot(kind="line", figsize=(10, 5), title="Blogs Scraped Over Time")
+    blog_counts.plot(kind="line", figsize=(10, 5),
+                     title="Blogs scraped over time")
     plt.ylabel("Blogs Published")
     plt.xlabel("Date")
     plt.tight_layout()
@@ -194,7 +203,7 @@ def plot_top_authors(ratings_full: pd.DataFrame, n: int = 10) -> None:
     Plot top authors by number of ratings.
 
     Args:
-        ratings_full (pd.DataFrame): Ratings DataFrame with 'author_name' column.
+        ratings_full (pd.DataFrame): Ratings DF with 'author_name' col.
         n (int): Number of top authors to display.
     """
     top_authors = ratings_full["author_name"].value_counts().head(n)
@@ -202,19 +211,20 @@ def plot_top_authors(ratings_full: pd.DataFrame, n: int = 10) -> None:
     plt.tight_layout()
     plt.show()
 
+
 def plot_top_blogs_with_error_bars(
     ratings_full: pd.DataFrame, n: int = 10, min_ratings: int = 3
 ) -> None:
     """
-    Plot horizontal bar chart of top-rated blogs with error bars showing std deviation.
+    Plot bar chart of top-rated blogs with error bars showing std dev.
 
     Short error bars indicate agreement among users on ratings.
     Long error bars indicate disagreement or polarizing ratings.
     Blogs with high average rating but large std dev might be controversial.
-    Blogs with lower average but small std dev might be consistently liked or disliked.
+    Blogs with lower average but small std dev might be consistently rated.
 
     Args:
-        ratings_full (pd.DataFrame): DataFrame containing 'blog_title' and 'ratings' columns.
+        ratings_full (pd.DataFrame): DF containing blog_title, ratings cols.
         n (int): Number of top blogs to display.
         min_ratings (int): Minimum number of ratings to consider a blog.
     """
@@ -222,7 +232,9 @@ def plot_top_blogs_with_error_bars(
         ratings_full.groupby("blog_title")["ratings"]
         .agg(["mean", "std", "count"])
         .rename(
-            columns={"mean": "avg_rating", "std": "std_rating", "count": "num_ratings"}
+            columns={"mean": "avg_rating",
+                     "std": "std_rating",
+                     "count": "num_ratings"}
         )
     )
     blog_stats = blog_stats[blog_stats["num_ratings"] >= min_ratings]
@@ -252,7 +264,7 @@ def plot_violin_top_blog_ratings(ratings_full, n=10, min_ratings=3):
     The white dot represents the median, thick bar = interquartile range (IQR).
 
     Args:
-        ratings_full (pd.DataFrame): Merged DataFrame with user ratings and blog metadata.
+        ratings_full (pd.DataFrame): Merged DF with ratings and blog metadata.
         n (int): Number of top blogs to display.
         min_ratings (int): Minimum number of ratings required per blog.
     """
@@ -304,9 +316,11 @@ def generate_word_cloud_from_content(blogs):
     plt.show()
 
 
-def heatmap_avg_rating_by_topic(ratings_full, min_ratings = 5):
+def heatmap_avg_rating_by_topic(ratings_full, min_ratings=5):
     """Display a heatmap of average ratings per topic.
-    min ratings - filters out topics that have too few ratings to be statistically reliable."""
+    min ratings - filters out topics that have too few ratings
+    to be statistically reliable.
+    """
     topic_stats = (
         ratings_full.groupby("topic")["ratings"]
         .agg(["mean", "count"])
@@ -322,16 +336,18 @@ def heatmap_avg_rating_by_topic(ratings_full, min_ratings = 5):
         avg_rating_matrix,
         annot=True,
         cmap="coolwarm",
-        center=ratings_full["ratings"].mean(),  # center colormap at overall average
+        # center at overall average
+        center=ratings_full["ratings"].mean(),
         fmt=".2f",
         linewidths=0.5,
-        cbar_kws={"label": "Average Rating"}
+        cbar_kws={"label": "Average Rating"},
     )
     plt.title("Average Rating by Blog Topic")
     plt.xlabel("Average Rating")
     plt.ylabel("Topic")
     plt.tight_layout()
     plt.show()
+
 
 def pre_process_text(
     text: str,
@@ -384,9 +400,13 @@ def clean_blog_text_column(blogs: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: DataFrame with added clean_blog_content.
     """
     stop_words = stopwords.words("english")
-    blogs["clean_blog_content"] = blogs["blog_content"].fillna("").apply(
-        lambda text: pre_process_text(
-            text, flg_stemm=False, flg_lemm=True, lst_stopwords=stop_words
+    blogs["clean_blog_content"] = (
+        blogs["blog_content"]
+        .fillna("")
+        .apply(
+            lambda text: pre_process_text(
+                text, flg_stemm=False, flg_lemm=True, lst_stopwords=stop_words
+            )
         )
     )
     return blogs
@@ -414,6 +434,7 @@ def clean_blog_text_column(blogs: pd.DataFrame) -> pd.DataFrame:
 #     feature_names = tfidf_vectorizer.get_feature_names_out()
 #     return tfidf_matrix, feature_names
 
+
 def holdout_new_users(
     ratings: pd.DataFrame,
     user_col: str = "user_id",
@@ -422,7 +443,8 @@ def holdout_new_users(
     seed: int = 42,
 ):
     """
-    Split ratings into train and test sets by holding out all ratings from a subset
+    Split ratings into train and test sets
+    by holding out all ratings from a subset
     of 'new' users with enough ratings.
 
     This simulates cold-start users in test.
@@ -430,7 +452,8 @@ def holdout_new_users(
     Args:
         ratings (pd.DataFrame): User-item rating DataFrame.
         user_col (str): Column name for user IDs.
-        min_ratings_per_user (int): Minimum ratings for a user to be eligible for holdout.
+        min_ratings_per_user (int): Minimum ratings for a user
+        to be eligible for holdout.
         num_new_users (int): Number of users to hold out as new users.
         seed (int): Random seed for reproducibility.
 
@@ -443,17 +466,27 @@ def holdout_new_users(
     user_counts = ratings[user_col].value_counts()
 
     # Filter eligible users with enough ratings
-    eligible_users = user_counts[user_counts >= min_ratings_per_user].index.tolist()
+    filtered_users = user_counts[user_counts >= min_ratings_per_user]
+    eligible_users = filtered_users.index.tolist()
 
     # Reproducible random selection of new users
     random.seed(seed)
-    new_users = random.sample(eligible_users, min(num_new_users, len(eligible_users)))
+    new_users = random.sample(eligible_users,
+                              min(num_new_users, len(eligible_users)))
 
     # Split datasets
-    train_df = ratings[~ratings[user_col].isin(new_users)].reset_index(drop=True)
-    test_df = ratings[ratings[user_col].isin(new_users)].reset_index(drop=True)
+    train_df = (
+        ratings[~ratings[user_col].isin(new_users)]
+        .reset_index(drop=True)
+    )
+
+    test_df = (
+        ratings[ratings[user_col].isin(new_users)]
+        .reset_index(drop=True)
+    )
 
     return train_df, test_df, new_users
+
 
 def run_eda_pipeline(base_path: str = "../data/raw"):
     print("Loading raw datasets...")
@@ -503,15 +536,23 @@ def run_eda_pipeline(base_path: str = "../data/raw"):
     # print("Sample TF-IDF features:", feature_names[:20])
 
     print("Saving cleaned blog and ratings data...")
-    # blogs_full.to_csv(os.path.join(base_path, "cleaned_blog_metadata.csv"), index=False)
-    # ratings_full.to_csv(os.path.join(base_path, "cleaned_blog_ratings.csv"), index=False)
-    blogs_full.to_pickle(os.path.join(processeddata_path, "cleaned_blog_metadata.pkl"))
-    ratings_full.to_pickle(os.path.join(processeddata_path, "cleaned_blog_ratings.pkl"))
+    # blogs_full.to_csv(os.path.join(base_path, "cleaned_blog_metadata.csv"),
+    # index=False)
+    # ratings_full.to_csv(os.path.join(base_path, "cleaned_blog_ratings.csv"),
+    # index=False)
+    blogs_full.to_pickle(os.path.join(processeddata_path,
+                                      "cleaned_blog_metadata.pkl"))
+    ratings_full.to_pickle(os.path.join(processeddata_path,
+                                        "cleaned_blog_ratings.pkl"))
     print(f"Cleaned data exported to {processeddata_path}")
 
     print("Splitting data into train and test sets with cold-start users...")
     train_df, test_df, new_users = holdout_new_users(
-        ratings_full, user_col="user_id", min_ratings_per_user=10, num_new_users=100, seed=42
+        ratings_full,
+        user_col="user_id",
+        min_ratings_per_user=10,
+        num_new_users=100,
+        seed=42,
     )
     print(f"Train set shape: {train_df.shape}")
     print(f"Test set shape: {test_df.shape}")
