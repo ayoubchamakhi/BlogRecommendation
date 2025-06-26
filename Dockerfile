@@ -27,5 +27,8 @@ ENV PYTHONPATH=/app
 ENV STREAMLIT_SERVER_PORT=8501
 ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
 
+# Install scikit-surprise
+RUN pip install scikit-surprise
+
 # Launch the Streamlit app
 CMD ["conda", "run", "-n", "blog-recommender-env", "streamlit", "run", "app/app.py", "--server.port=8501", "--server.address=0.0.0.0"]

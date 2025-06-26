@@ -20,3 +20,4 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    # Ensure .streamlit/config.toml is available for theme

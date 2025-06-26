@@ -214,3 +214,55 @@ To remove all stopped containers, networks, and dangling images:
 ```bash
 docker system prune -a
 ```
+
+## Hybrid Recommendation Approach
+
+- **Guest Users:** Receive content-based recommendations using the embedding model. Only users with fewer than 5 ratings are available in the guest user dropdown.
+- **Login Users:** If a user has 5 or more ratings, collaborative filtering is used. If not, the content-based model is used as a fallback. Only users with 5 or more ratings are available in the login user dropdown.
+- **LLM Summarization:** Both guest and login users receive LLM-generated personalized summaries for each recommendation.
+- **Advanced Filtering:** Users can filter recommendations by topic and minimum average rating.
+
+## UI Overview
+- **Landing Page:** Choose between "Continue as Guest" and "Login". Minimal, modern UI.
+- **Sidebar:** User selection, recommendation controls, advanced filters, and sign out/back to home.
+- **Main Area:** Recommendations are shown with all metadata (title, content, topic, author, etc.) and LLM summary.
+
+## Dependencies
+- Python 3.8+
+- streamlit
+- pandas
+- openai
+- scikit-learn
+- scikit-surprise
+- numpy
+- python-dotenv
+- matplotlib
+- flake8, black, pylint (for linting/formatting)
+
+## Running Locally
+1. Install dependencies:
+   ```bash
+   conda env create -f environment.yml
+   conda activate <env-name>
+   # or
+   pip install -r requirements.txt
+   ```
+2. Run the app:
+   ```bash
+   streamlit run app/app.py
+   ```
+
+## Docker
+- The Dockerfile and docker-compose.yaml are set up to install all dependencies, including scikit-surprise.
+- To build and run:
+   ```bash
+   docker build -t blog-recommender .
+   docker run -p 8501:8501 blog-recommender
+   ```
+
+## .streamlit/config.toml
+- The app uses a light theme and custom UI. Make sure `.streamlit/config.toml` is present for consistent appearance.
+
+## Notes
+- Do not upload sensitive files (e.g., `.env`, `.streamlit/secrets.toml`, data, models) to GitHub.
+- See `.gitignore` for details.

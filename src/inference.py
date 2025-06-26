@@ -6,7 +6,7 @@ import pandas as pd
 print("--- Inference Script Initialized ---")
 
 # --- 1. Define Paths ---
-base_path = os.getcwd()
+base_path = os.path.dirname(os.getcwd())
 models_path = os.path.join(base_path, "models")
 processed_path = os.path.join(base_path, "data", "processed")
 
@@ -85,7 +85,7 @@ def get_top_n_recommendations(user_id, n=10):
     # Assuming metadata_df has 'blog_id' and 'title' columns
     results_df = pd.merge(results_df, metadata_df, on="blog_id", how="left")
 
-    return results_df[["blog_id", "blog_title", "predicted_rating"]]
+    return results_df[["blog_id", "blog_title", "predicted_rating", "topic","author_name"]]
 
 
 if __name__ == "__main__":
