@@ -1,6 +1,6 @@
+import math
 import os
 import pickle
-import math
 from collections import defaultdict
 
 import pandas as pd
@@ -11,31 +11,20 @@ def precision_recall_at_k(predictions, k=10, threshold=3):
     Return precision and recall at k metrics for each user.
     This version correctly evaluates the quality of the ranked list.
     """
-    # First, map the predictions to each user.
     user_est_true = defaultdict(list)
     for uid, _, true_r, est, _ in predictions:
         user_est_true[uid].append((est, true_r))
 
-    precisions = dict()
-    recalls = dict()
+    precisions = {}
+    recalls = {}
     for uid, user_ratings in user_est_true.items():
-        # Sort user ratings by estimated value (the predicted rating)
-        # to get the top k recommendations.
         user_ratings.sort(key=lambda x: x[0], reverse=True)
 
-        # Number of relevant items in the test set for this user
-        n_rel = sum((true_r >= threshold) for (_, true_r) in user_ratings)
+        n_rel = sum(true_r >= threshold for _, true_r in user_ratings)
+        n_rel_and_rec_k = sum(true_r >= threshold for _, true_r in user_ratings[:k])
 
-        # Number of recommended items in top k that are relevant.
-        n_rel_and_rec_k = sum(
-            (true_r >= threshold) for (_, true_r) in user_ratings[:k]
-        )
-
-        # Precision@k: Proportion of recommended items in top-k that are relevant.
         precisions[uid] = n_rel_and_rec_k / k
-
-        # Recall@k: Proportion of relevant items that are in the top-k list.
-        recalls[uid] = (n_rel_and_rec_k / n_rel) if n_rel != 0 else 0
+        recalls[uid] = n_rel_and_rec_k / n_rel if n_rel != 0 else 0
 
     mean_precision = sum(prec for prec in precisions.values()) / len(precisions)
     mean_recall = sum(rec for rec in recalls.values()) / len(recalls)
@@ -55,30 +44,35 @@ try:
     with open(model_filepath, "rb") as f:
         saved_model = pickle.load(f)
         algo = saved_model["algorithm"]
-    print(f"Successfully loaded model from {model_filepath}")
+    print("Successfully loaded model from " + model_filepath)
 except FileNotFoundError:
-    print(f"ERROR: Model not found at {model_filepath}. Please run train.py first.")
+    print(
+        "ERROR: Model not found at " + model_filepath + ". Please run train.py first."
+    )
     exit()
 
 try:
     test_df = pd.read_pickle(test_df_path)
-    print(f"Successfully loaded test data from {test_df_path}")
+    print("Successfully loaded test data from " + test_df_path)
 except FileNotFoundError:
-    print(f"ERROR: Test data not found at {test_df_path}")
+    print("ERROR: Test data not found at " + test_df_path)
     exit()
 
 # --- 2. Generate Predictions ---
 if "ratings" not in test_df.columns:
-    print("ERROR: 'Rating' column not found in test_df. Please check your data.")
+    print("ERROR: 'Rating' column not found in test_df. " "Please check your data.")
     exit()
-testset = list(test_df[["user_id", "blog_id", "ratings"]].itertuples(
-    index=False, name=None
-))
+
+testset = list(
+    test_df[["user_id", "blog_id", "ratings"]].itertuples(index=False, name=None)
+)
 predictions = algo.test(testset)
 
 # --- 2.1 Compute RMSE ---
-# predictions is a list of tuples: (uid, iid, true_r, est, details)
-mse = sum((true_r - est) ** 2 for (_, _, true_r, est, _) in predictions) / len(predictions)
+# predictions: (uid, iid, true_r, est, details)
+mse = sum((true_r - est) ** 2 for _, _, true_r, est, _ in predictions) / len(
+    predictions
+)
 rmse = math.sqrt(mse)
 print(f"\nRMSE on test set: {rmse:.4f}")
 
@@ -91,12 +85,19 @@ mean_precision, mean_recall = precision_recall_at_k(
 )
 
 print("\n--- Final Model Performance on Unseen Test Data ---")
-print(f"Relevance Threshold: A blog is 'relevant' if its true rating is >= {relevance_threshold}")
+print(
+    f"Relevance Threshold: A blog is 'relevant' if its "
+    f"true rating is >= {relevance_threshold}"
+)
 print(f"K value: {k_value}\n")
 print(f"RMSE:               {rmse:.4f}")
 print(f"Precision@{k_value}: {mean_precision:.4f}")
 print(f"Recall@{k_value}:    {mean_recall:.4f}")
-
-print("\nThis means that, on average, if we show a user the top "
-      f"{k_value} blogs, {mean_precision:.1%} of them will be blogs they actually like.")
+print(
+    "\nThis means that, on average, if we show a user the top "
+    + str(k_value)
+    + " blogs, "
+    + f"{mean_precision:.1%}"
+    + " will be blogs they actually like."
+)
 print("--- Evaluation Script Finished ---")
