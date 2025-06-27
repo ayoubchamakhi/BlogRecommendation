@@ -7,7 +7,7 @@ dependencies:
   # --- Conda Packages ---
   - python=3.11
   - pandas
-  - numpy
+  - numpy<2.0
   - scikit-learn
   - matplotlib
   - seaborn
@@ -22,7 +22,7 @@ dependencies:
   - black
   - isort
   - flake8
-  - pytest
+  - pylint
   - pip
   - h5py
   - scikit-surprise
